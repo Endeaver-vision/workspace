@@ -60,7 +60,7 @@ export default async function WorkspacePage({ params }: WorkspacePageProps) {
               'use server'
               const supabase = await createClient()
 
-              const { data: newPage } = await (supabase
+              const { data: newPage, error } = await (supabase
                 .from('pages') as any)
                 .insert({
                   workspace_id: workspaceId,
@@ -70,6 +70,11 @@ export default async function WorkspacePage({ params }: WorkspacePageProps) {
                 })
                 .select()
                 .single()
+
+              if (error) {
+                console.error('Failed to create page:', error)
+                return
+              }
 
               if (newPage) {
                 redirect(`/${workspaceId}/${(newPage as Page).id}`)
