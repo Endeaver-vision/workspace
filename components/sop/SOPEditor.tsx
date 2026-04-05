@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
-import { ArrowLeft, Save, Upload, MoreHorizontal, Eye, Archive, Trash2 } from 'lucide-react'
+import { ArrowLeft, Save, Upload, MoreHorizontal, Eye, Archive, Trash2, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -22,8 +22,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useSOPStore } from '@/lib/store/sop-store'
+import { AssignmentModal } from '@/components/users'
 import type { SOPStatus } from '@/types/training.types'
 import { cn } from '@/lib/utils'
+
+// Test user ID for development
+const TEST_USER_ID = '00000000-0000-0000-0000-000000000001'
 
 // Dynamically import Editor to avoid SSR issues
 const Editor = dynamic(
@@ -48,6 +52,7 @@ export function SOPEditor({ sopId, workspaceId }: SOPEditorProps) {
   const [content, setContent] = useState<any>(null)
   const [categoryId, setCategoryId] = useState<string | null>(null)
   const [hasChanges, setHasChanges] = useState(false)
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false)
 
   const {
     currentSOP,
@@ -211,11 +216,22 @@ export function SOPEditor({ sopId, workspaceId }: SOPEditorProps) {
             </Button>
           )}
 
+          {currentSOP.status === 'published' && (
+            <Button size="sm" variant="outline" onClick={() => setIsAssignModalOpen(true)}>
+              <Users className="h-4 w-4 mr-2" />
+              Assign
+            </Button>
+          )}
+
           <DropdownMenu>
             <DropdownMenuTrigger className="h-9 w-9 inline-flex items-center justify-center rounded-md hover:bg-accent">
               <MoreHorizontal className="h-4 w-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setIsAssignModalOpen(true)}>
+                <Users className="h-4 w-4 mr-2" />
+                Assign to Users
+              </DropdownMenuItem>
               <DropdownMenuItem>
                 <Upload className="h-4 w-4 mr-2" />
                 Upload Document
@@ -254,6 +270,14 @@ export function SOPEditor({ sopId, workspaceId }: SOPEditorProps) {
           </div>
         </div>
       </div>
+
+      <AssignmentModal
+        open={isAssignModalOpen}
+        onOpenChange={setIsAssignModalOpen}
+        sopId={sopId}
+        sopTitle={title}
+        assignedBy={TEST_USER_ID}
+      />
     </div>
   )
 }
