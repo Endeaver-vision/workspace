@@ -24,8 +24,8 @@ export function WorkspaceProvider({ workspaceId, children }: WorkspaceProviderPr
   useEffect(() => {
     const fetchWorkspace = async () => {
       const supabase = createClient()
-      const { data } = await supabase
-        .from('workspaces')
+      const { data } = await (supabase
+        .from('workspaces') as any)
         .select('slug')
         .eq('id', workspaceId)
         .single()
