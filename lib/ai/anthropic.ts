@@ -1,14 +1,21 @@
 import OpenAI from 'openai'
 
-// Initialize OpenRouter client (OpenAI-compatible API)
-const openrouter = new OpenAI({
-  baseURL: 'https://openrouter.ai/api/v1',
-  apiKey: process.env.OPENROUTER_API_KEY,
-  defaultHeaders: {
-    'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-    'X-Title': 'TrainHub',
-  },
-})
+// Lazy-initialize OpenRouter client to avoid build-time errors
+let _openrouter: OpenAI | null = null
+
+function getOpenRouter(): OpenAI {
+  if (!_openrouter) {
+    _openrouter = new OpenAI({
+      baseURL: 'https://openrouter.ai/api/v1',
+      apiKey: process.env.OPENROUTER_API_KEY || 'dummy-key-for-build',
+      defaultHeaders: {
+        'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+        'X-Title': 'TrainHub',
+      },
+    })
+  }
+  return _openrouter
+}
 
 // Using Gemini Flash 2.5 via OpenRouter
 export const AI_MODEL = 'google/gemini-2.5-flash'
@@ -26,7 +33,7 @@ export async function chat(
     temperature?: number
   }
 ): Promise<string> {
-  const response = await openrouter.chat.completions.create({
+  const response = await getOpenRouter().chat.completions.create({
     model: AI_MODEL,
     max_tokens: options?.maxTokens || 1024,
     temperature: options?.temperature || 0.7,
@@ -50,7 +57,7 @@ export async function generateText(
     temperature?: number
   }
 ): Promise<string> {
-  const response = await openrouter.chat.completions.create({
+  const response = await getOpenRouter().chat.completions.create({
     model: AI_MODEL,
     max_tokens: options?.maxTokens || 2048,
     temperature: options?.temperature || 0.7,
@@ -70,7 +77,7 @@ export async function generateJSON<T>(
     maxTokens?: number
   }
 ): Promise<T> {
-  const response = await openrouter.chat.completions.create({
+  const response = await getOpenRouter().chat.completions.create({
     model: AI_MODEL,
     max_tokens: options?.maxTokens || 4096,
     temperature: 0.3, // Lower temperature for structured output
@@ -100,4 +107,4 @@ export async function generateJSON<T>(
   return JSON.parse(jsonStr.trim()) as T
 }
 
-export { openrouter }
+export { getOpenRouter as openrouter }
