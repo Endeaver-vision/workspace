@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { generateText } from '@/lib/ai/anthropic'
 
 // AI-powered summarization of SOP content
-// In production, this would use an LLM like Claude or GPT
 export async function POST(request: NextRequest) {
   try {
     const { sopId, sopTitle, content, length = 'standard', format = 'paragraph' } = await request.json()
@@ -15,17 +15,60 @@ export async function POST(request: NextRequest) {
 
     // Extract text content from BlockNote format
     const textContent = extractTextContent(content)
+    const fullContent = textContent.join('\n\n')
 
-    // In production, this would call an AI service to generate summary
-    // For now, generate a mock summary
-    const summary = generateMockSummary(sopTitle, textContent, length, format)
+    if (!fullContent.trim()) {
+      return NextResponse.json(
+        { error: 'No text content found in SOP' },
+        { status: 400 }
+      )
+    }
 
-    // Simulate AI processing delay
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // Build length instruction
+    const lengthInstructions: Record<string, string> = {
+      brief: 'Write a very brief summary in 2-3 sentences.',
+      standard: 'Write a standard summary in one paragraph (4-6 sentences).',
+      detailed: 'Write a detailed summary covering all major sections and key points (2-3 paragraphs).',
+    }
+
+    // Build format instruction
+    const formatInstructions: Record<string, string> = {
+      paragraph: 'Write in paragraph form with proper prose.',
+      bullets: 'Use bullet points (•) to list key points.',
+      outline: 'Use a hierarchical outline format with Roman numerals (I, II, III) and letters (A, B, C).',
+    }
+
+    const prompt = `Summarize the following training document.
+
+Document Title: ${sopTitle || 'Training Document'}
+
+Document Content:
+${fullContent.slice(0, 10000)}
+
+Instructions:
+- ${lengthInstructions[length] || lengthInstructions.standard}
+- ${formatInstructions[format] || formatInstructions.paragraph}
+- Focus on key procedures, requirements, and actionable information
+- Maintain professional tone appropriate for corporate training`
+
+    const summary = await generateText(prompt, {
+      systemPrompt: 'You are a technical writer specializing in creating clear, concise summaries of corporate training materials and Standard Operating Procedures. Your summaries help employees quickly understand key points and requirements.',
+      maxTokens: 1500,
+      temperature: 0.5,
+    })
 
     return NextResponse.json({ summary })
   } catch (error: any) {
     console.error('Summarization error:', error)
+
+    // Check for API key error
+    if (error.message?.includes('API key') || error.status === 401) {
+      return NextResponse.json(
+        { error: 'AI service not configured. Please add ANTHROPIC_API_KEY to environment.' },
+        { status: 503 }
+      )
+    }
+
     return NextResponse.json(
       { error: error.message || 'Summarization failed' },
       { status: 500 }
@@ -53,81 +96,4 @@ function extractTextContent(content: any): string[] {
 
   content.forEach(extractFromBlock)
   return texts
-}
-
-function generateMockSummary(
-  title: string,
-  textContent: string[],
-  length: string,
-  format: string
-): string {
-  const contentPreview = textContent.slice(0, 5).join(' ').slice(0, 300)
-
-  if (format === 'bullets') {
-    const bullets = [
-      `This SOP covers "${title}"`,
-      'Key procedures and guidelines are outlined',
-      'Step-by-step instructions are provided',
-      'Safety considerations are addressed',
-      'Compliance requirements are documented',
-    ]
-
-    if (length === 'brief') {
-      return bullets.slice(0, 2).map(b => `• ${b}`).join('\n')
-    } else if (length === 'detailed') {
-      return [
-        ...bullets,
-        'Best practices are recommended',
-        'Common issues and solutions are covered',
-        'Review and approval process is included',
-      ].map(b => `• ${b}`).join('\n')
-    }
-    return bullets.map(b => `• ${b}`).join('\n')
-  }
-
-  if (format === 'outline') {
-    const outline = `I. Overview
-   A. Purpose of ${title}
-   B. Scope and applicability
-
-II. Key Procedures
-   A. Initial steps
-   B. Main process
-   C. Completion criteria
-
-III. Requirements
-   A. Prerequisites
-   B. Compliance standards
-
-IV. Conclusion
-   A. Review process
-   B. Updates and revisions`
-
-    if (length === 'brief') {
-      return outline.split('\n').slice(0, 5).join('\n')
-    } else if (length === 'detailed') {
-      return outline + `
-
-V. Additional Resources
-   A. Related documents
-   B. Training materials
-   C. Contact information`
-    }
-    return outline
-  }
-
-  // Paragraph format
-  if (length === 'brief') {
-    return `This SOP provides essential guidance on "${title}". It outlines the key procedures and requirements for compliance.`
-  } else if (length === 'detailed') {
-    return `This Standard Operating Procedure document titled "${title}" provides comprehensive guidance for the associated processes and procedures.
-
-The document outlines key responsibilities, step-by-step procedures, and compliance requirements that must be followed. It covers initial preparation, execution of the main process, and proper documentation of completion.
-
-Safety considerations and best practices are integrated throughout to ensure proper execution. The SOP also addresses common issues that may arise and provides solutions for handling them effectively.
-
-Regular review and updates are recommended to maintain alignment with current standards and regulatory requirements.${contentPreview ? `\n\nContent preview: "${contentPreview}..."` : ''}`
-  }
-
-  return `This SOP titled "${title}" outlines the essential procedures and guidelines for the covered process. It includes step-by-step instructions, safety considerations, and compliance requirements. The document serves as a comprehensive reference for proper execution and documentation of the associated activities.`
 }

@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { generateJSON } from '@/lib/ai/anthropic'
 import type { QuestionType, QuizOption } from '@/types/training.types'
 
-// Use crypto.randomUUID() instead of uuid package
 const uuidv4 = () => crypto.randomUUID()
 
+interface AIGeneratedQuestion {
+  question: string
+  type: 'multiple_choice' | 'true_false' | 'fill_blank'
+  options?: string[]
+  correctAnswer: string | number
+  explanation?: string
+}
+
 // AI-powered quiz generation from SOP content
-// In production, this would use an LLM like Claude or GPT
 export async function POST(request: NextRequest) {
   try {
     const { sopId, sopTitle, content, numQuestions = 5, difficulty = 'medium', questionTypes } = await request.json()
@@ -19,23 +26,112 @@ export async function POST(request: NextRequest) {
 
     // Extract text content from BlockNote format
     const textContent = extractTextContent(content)
+    const fullContent = textContent.join('\n\n')
 
-    // In production, this would call an AI service to generate questions
-    // For now, generate mock questions based on content structure
-    const questions = generateMockQuestions(
-      sopTitle,
-      textContent,
-      numQuestions,
-      difficulty,
-      questionTypes || ['multiple_choice', 'true_false']
-    )
+    if (!fullContent.trim()) {
+      return NextResponse.json(
+        { error: 'No text content found in SOP' },
+        { status: 400 }
+      )
+    }
 
-    // Simulate AI processing delay
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    const types = questionTypes || ['multiple_choice', 'true_false']
+    const typesList = types.join(', ')
+
+    const prompt = `Generate ${numQuestions} quiz questions based on this training document.
+
+Document Title: ${sopTitle || 'Training Document'}
+
+Document Content:
+${fullContent.slice(0, 8000)}
+
+Requirements:
+- Difficulty level: ${difficulty}
+- Question types to include: ${typesList}
+- Questions should test understanding of key concepts, procedures, and compliance requirements
+- Make questions specific to the actual content provided
+- For multiple_choice: provide exactly 4 options, correctAnswer is the 0-based index of correct option
+- For true_false: correctAnswer should be "true" or "false"
+- For fill_blank: correctAnswer is the expected word/phrase
+
+Return a JSON array in this exact format:
+[
+  {
+    "question": "What is the first step in the procedure?",
+    "type": "multiple_choice",
+    "options": ["Option A", "Option B", "Option C", "Option D"],
+    "correctAnswer": 0,
+    "explanation": "Brief explanation"
+  },
+  {
+    "question": "True or false: The procedure requires manager approval.",
+    "type": "true_false",
+    "correctAnswer": "true",
+    "explanation": "Brief explanation"
+  }
+]`
+
+    const aiQuestions = await generateJSON<AIGeneratedQuestion[]>(prompt, {
+      systemPrompt: 'You are an expert instructional designer creating assessment questions for corporate training. Generate clear, relevant questions that directly test comprehension of the provided material. Questions must be based on the actual content given.',
+      maxTokens: 4096,
+    })
+
+    // Transform AI response to match expected format
+    const questions = aiQuestions.map((q, index) => {
+      const questionId = uuidv4()
+
+      if (q.type === 'multiple_choice' && q.options) {
+        const options: QuizOption[] = q.options.map((text, i) => ({
+          id: uuidv4(),
+          text,
+          isCorrect: i === q.correctAnswer,
+        }))
+
+        return {
+          id: questionId,
+          type: 'multiple_choice' as QuestionType,
+          question: q.question,
+          options,
+          correct_answer: null,
+          points: difficulty === 'hard' ? 2 : 1,
+          explanation: q.explanation,
+        }
+      } else if (q.type === 'true_false') {
+        return {
+          id: questionId,
+          type: 'true_false' as QuestionType,
+          question: q.question,
+          options: null,
+          correct_answer: String(q.correctAnswer).toLowerCase(),
+          points: 1,
+          explanation: q.explanation,
+        }
+      } else {
+        // fill_blank
+        return {
+          id: questionId,
+          type: 'fill_blank' as QuestionType,
+          question: q.question,
+          options: null,
+          correct_answer: String(q.correctAnswer),
+          points: difficulty === 'hard' ? 2 : 1,
+          explanation: q.explanation,
+        }
+      }
+    })
 
     return NextResponse.json({ questions })
   } catch (error: any) {
     console.error('Quiz generation error:', error)
+
+    // Check for API key error
+    if (error.message?.includes('API key') || error.status === 401) {
+      return NextResponse.json(
+        { error: 'AI service not configured. Please add ANTHROPIC_API_KEY to environment.' },
+        { status: 503 }
+      )
+    }
+
     return NextResponse.json(
       { error: error.message || 'Quiz generation failed' },
       { status: 500 }
@@ -63,65 +159,4 @@ function extractTextContent(content: any): string[] {
 
   content.forEach(extractFromBlock)
   return texts
-}
-
-function generateMockQuestions(
-  title: string,
-  textContent: string[],
-  numQuestions: number,
-  difficulty: string,
-  questionTypes: QuestionType[]
-): any[] {
-  const questions: any[] = []
-  const usedTypes = questionTypes.length > 0 ? questionTypes : ['multiple_choice', 'true_false']
-
-  // Generate questions based on content
-  for (let i = 0; i < numQuestions; i++) {
-    const type = usedTypes[i % usedTypes.length] as QuestionType
-    const questionId = uuidv4()
-
-    if (type === 'multiple_choice') {
-      const options: QuizOption[] = [
-        { id: uuidv4(), text: `Correct answer for question ${i + 1}`, isCorrect: true },
-        { id: uuidv4(), text: 'Incorrect option A', isCorrect: false },
-        { id: uuidv4(), text: 'Incorrect option B', isCorrect: false },
-        { id: uuidv4(), text: 'Incorrect option C', isCorrect: false },
-      ]
-      // Shuffle options
-      for (let j = options.length - 1; j > 0; j--) {
-        const k = Math.floor(Math.random() * (j + 1))
-        ;[options[j], options[k]] = [options[k], options[j]]
-      }
-
-      questions.push({
-        id: questionId,
-        type: 'multiple_choice',
-        question: `Based on "${title}", what is the correct answer for scenario ${i + 1}?`,
-        options,
-        correct_answer: null,
-        points: difficulty === 'hard' ? 2 : 1,
-      })
-    } else if (type === 'true_false') {
-      const isTrue = Math.random() > 0.5
-      questions.push({
-        id: questionId,
-        type: 'true_false',
-        question: `True or False: Statement ${i + 1} about "${title}" is accurate.`,
-        options: null,
-        correct_answer: isTrue ? 'true' : 'false',
-        points: 1,
-      })
-    } else if (type === 'fill_blank') {
-      questions.push({
-        id: questionId,
-        type: 'fill_blank',
-        question: `Complete the following: The key concept in "${title}" is _______.`,
-        options: null,
-        correct_answer: 'expected answer',
-        points: difficulty === 'hard' ? 2 : 1,
-      })
-    }
-  }
-
-  return questions
 }
