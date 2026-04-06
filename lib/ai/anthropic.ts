@@ -11,7 +11,7 @@ const openrouter = new OpenAI({
 })
 
 // Using Gemini Flash 2.5 via OpenRouter
-export const AI_MODEL = 'google/gemini-2.5-flash-preview'
+export const AI_MODEL = 'google/gemini-2.5-flash'
 
 export interface ChatMessage {
   role: 'user' | 'assistant'
