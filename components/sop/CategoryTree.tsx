@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronRight, Folder, FolderOpen, Plus, MoreHorizontal, Edit, Trash2 } from 'lucide-react'
+import { ChevronRight, Folder, FolderOpen, Plus, MoreHorizontal, Edit, Trash2, LayoutGrid } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -27,6 +27,7 @@ interface CategoryTreeProps {
   selectedCategory: string | null
   onSelectCategory: (categoryId: string | null) => void
   workspaceId: string
+  sopCounts?: Record<string, number>
 }
 
 interface CategoryNodeProps {
@@ -36,6 +37,7 @@ interface CategoryNodeProps {
   onSelectCategory: (categoryId: string | null) => void
   onEdit: (category: SOPCategory) => void
   onDelete: (categoryId: string) => void
+  sopCount?: number
 }
 
 function CategoryNode({
@@ -45,6 +47,7 @@ function CategoryNode({
   onSelectCategory,
   onEdit,
   onDelete,
+  sopCount = 0,
 }: CategoryNodeProps) {
   const [isExpanded, setIsExpanded] = useState(true)
   const hasChildren = category.children && category.children.length > 0
@@ -54,10 +57,11 @@ function CategoryNode({
     <div>
       <div
         className={cn(
-          'group flex items-center gap-1 py-1.5 px-2 rounded-md cursor-pointer hover:bg-muted',
-          isSelected && 'bg-primary/10 text-primary'
+          'group flex items-center gap-1 py-2 px-3 rounded-lg cursor-pointer hover:bg-muted transition-colors',
+          isSelected && 'bg-primary/10 text-primary border border-primary/20'
         )}
-        style={{ paddingLeft: `${level * 16 + 8}px` }}
+        style={{ paddingLeft: `${level * 16 + 12}px` }}
+        onClick={() => onSelectCategory(isSelected ? null : category.id)}
       >
         {hasChildren ? (
           <Button
@@ -80,16 +84,21 @@ function CategoryNode({
           <div className="w-5" />
         )}
 
-        <div
-          className="flex items-center gap-2 flex-1 min-w-0"
-          onClick={() => onSelectCategory(isSelected ? null : category.id)}
-        >
-          {isExpanded && hasChildren ? (
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          {/* Display custom icon if available, otherwise use folder icon */}
+          {category.icon ? (
+            <span className="text-lg flex-shrink-0">{category.icon}</span>
+          ) : isExpanded && hasChildren ? (
             <FolderOpen className="h-4 w-4 text-yellow-500 flex-shrink-0" />
           ) : (
             <Folder className="h-4 w-4 text-yellow-500 flex-shrink-0" />
           )}
-          <span className="text-sm truncate">{category.name}</span>
+          <span className="text-sm font-medium truncate">{category.name}</span>
+          {sopCount > 0 && (
+            <span className="ml-auto text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+              {sopCount}
+            </span>
+          )}
         </div>
 
         <DropdownMenu>
@@ -139,12 +148,15 @@ export function CategoryTree({
   selectedCategory,
   onSelectCategory,
   workspaceId,
+  sopCounts = {},
 }: CategoryTreeProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<SOPCategory | null>(null)
   const [categoryName, setCategoryName] = useState('')
 
   const { categoryTree, createCategory, updateCategory, deleteCategory } = useSOPStore()
+
+  const totalSops = Object.values(sopCounts).reduce((a, b) => a + b, 0)
 
   const handleSaveCategory = async () => {
     if (!categoryName.trim()) return
@@ -185,29 +197,37 @@ export function CategoryTree({
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1">
       <div
         className={cn(
-          'flex items-center gap-2 py-1.5 px-2 rounded-md cursor-pointer hover:bg-muted',
-          selectedCategory === null && 'bg-primary/10 text-primary'
+          'flex items-center gap-2 py-2 px-3 rounded-lg cursor-pointer hover:bg-muted transition-colors',
+          selectedCategory === null && 'bg-primary/10 text-primary border border-primary/20'
         )}
         onClick={() => onSelectCategory(null)}
       >
-        <Folder className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm">All SOPs</span>
+        <LayoutGrid className="h-4 w-4 text-muted-foreground" />
+        <span className="text-sm font-medium">All SOPs</span>
+        {totalSops > 0 && (
+          <span className="ml-auto text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+            {totalSops}
+          </span>
+        )}
       </div>
 
-      {categoryTree.map((category) => (
-        <CategoryNode
-          key={category.id}
-          category={category}
-          level={0}
-          selectedCategory={selectedCategory}
-          onSelectCategory={onSelectCategory}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
-      ))}
+      <div className="mt-3 space-y-1">
+        {categoryTree.map((category) => (
+          <CategoryNode
+            key={category.id}
+            category={category}
+            level={0}
+            selectedCategory={selectedCategory}
+            onSelectCategory={onSelectCategory}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            sopCount={sopCounts[category.id] || 0}
+          />
+        ))}
+      </div>
 
       <Button
         variant="ghost"

@@ -75,9 +75,10 @@ export function SOPCard({ sop, workspaceId, onArchive, onDelete }: SOPCardProps)
         </div>
 
         {sop.category && (
-          <p className="text-sm text-muted-foreground truncate mb-2">
-            {sop.category.name}
-          </p>
+          <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-2">
+            {sop.category.icon && <span>{sop.category.icon}</span>}
+            <span className="truncate">{sop.category.name}</span>
+          </div>
         )}
       </CardContent>
 

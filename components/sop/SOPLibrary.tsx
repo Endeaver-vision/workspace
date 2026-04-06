@@ -65,6 +65,14 @@ export function SOPLibrary({ workspaceId }: SOPLibraryProps) {
     }
   }
 
+  // Calculate SOP counts per category
+  const sopCounts = sops.reduce((acc, sop) => {
+    if (sop.category_id) {
+      acc[sop.category_id] = (acc[sop.category_id] || 0) + 1
+    }
+    return acc
+  }, {} as Record<string, number>)
+
   // Filter SOPs
   let displaySOPs = searchQuery.trim()
     ? searchResults.map((r) => r.sop)
@@ -81,13 +89,14 @@ export function SOPLibrary({ workspaceId }: SOPLibraryProps) {
   return (
     <div className="flex h-full">
       {/* Categories Sidebar */}
-      <div className="w-64 border-r bg-muted/30 p-4">
-        <h3 className="font-semibold mb-4">Categories</h3>
+      <div className="w-72 border-r bg-muted/30 p-4">
+        <h3 className="font-semibold mb-4 text-lg">Categories</h3>
         <CategoryTree
           categories={categories}
           selectedCategory={selectedCategory}
           onSelectCategory={setSelectedCategory}
           workspaceId={workspaceId}
+          sopCounts={sopCounts}
         />
       </div>
 
