@@ -89,7 +89,7 @@ Guidelines:
     // Check for API key error
     if (error.message?.includes('API key') || error.status === 401) {
       return NextResponse.json(
-        { error: 'AI service not configured. Please add ANTHROPIC_API_KEY to environment.' },
+        { error: 'AI service not configured. Please add OPENROUTER_API_KEY to environment.' },
         { status: 503 }
       )
     }

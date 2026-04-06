@@ -1,10 +1,17 @@
-import Anthropic from '@anthropic-ai/sdk'
+import OpenAI from 'openai'
 
-// Initialize the Anthropic client
-// Requires ANTHROPIC_API_KEY environment variable
-const anthropic = new Anthropic()
+// Initialize OpenRouter client (OpenAI-compatible API)
+const openrouter = new OpenAI({
+  baseURL: 'https://openrouter.ai/api/v1',
+  apiKey: process.env.OPENROUTER_API_KEY,
+  defaultHeaders: {
+    'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+    'X-Title': 'TrainHub',
+  },
+})
 
-export const CLAUDE_MODEL = 'claude-sonnet-4-20250514'
+// Using Gemini Flash 2.5 via OpenRouter
+export const AI_MODEL = 'google/gemini-2.5-flash-preview'
 
 export interface ChatMessage {
   role: 'user' | 'assistant'
@@ -19,20 +26,20 @@ export async function chat(
     temperature?: number
   }
 ): Promise<string> {
-  const response = await anthropic.messages.create({
-    model: CLAUDE_MODEL,
+  const response = await openrouter.chat.completions.create({
+    model: AI_MODEL,
     max_tokens: options?.maxTokens || 1024,
     temperature: options?.temperature || 0.7,
-    system: systemPrompt,
-    messages: messages.map(m => ({
-      role: m.role,
-      content: m.content,
-    })),
+    messages: [
+      { role: 'system', content: systemPrompt },
+      ...messages.map(m => ({
+        role: m.role as 'user' | 'assistant',
+        content: m.content,
+      })),
+    ],
   })
 
-  // Extract text from response
-  const textBlock = response.content.find(block => block.type === 'text')
-  return textBlock ? textBlock.text : ''
+  return response.choices[0]?.message?.content || ''
 }
 
 export async function generateText(
@@ -43,16 +50,17 @@ export async function generateText(
     temperature?: number
   }
 ): Promise<string> {
-  const response = await anthropic.messages.create({
-    model: CLAUDE_MODEL,
+  const response = await openrouter.chat.completions.create({
+    model: AI_MODEL,
     max_tokens: options?.maxTokens || 2048,
     temperature: options?.temperature || 0.7,
-    system: options?.systemPrompt || 'You are a helpful assistant.',
-    messages: [{ role: 'user', content: prompt }],
+    messages: [
+      { role: 'system', content: options?.systemPrompt || 'You are a helpful assistant.' },
+      { role: 'user', content: prompt },
+    ],
   })
 
-  const textBlock = response.content.find(block => block.type === 'text')
-  return textBlock ? textBlock.text : ''
+  return response.choices[0]?.message?.content || ''
 }
 
 export async function generateJSON<T>(
@@ -62,19 +70,24 @@ export async function generateJSON<T>(
     maxTokens?: number
   }
 ): Promise<T> {
-  const response = await anthropic.messages.create({
-    model: CLAUDE_MODEL,
+  const response = await openrouter.chat.completions.create({
+    model: AI_MODEL,
     max_tokens: options?.maxTokens || 4096,
     temperature: 0.3, // Lower temperature for structured output
-    system: (options?.systemPrompt || '') + '\n\nRespond only with valid JSON, no other text.',
-    messages: [{ role: 'user', content: prompt }],
+    messages: [
+      {
+        role: 'system',
+        content: (options?.systemPrompt || '') + '\n\nRespond only with valid JSON, no other text or markdown formatting.',
+      },
+      { role: 'user', content: prompt },
+    ],
   })
 
-  const textBlock = response.content.find(block => block.type === 'text')
-  if (!textBlock) throw new Error('No response from AI')
+  const content = response.choices[0]?.message?.content || ''
+  if (!content) throw new Error('No response from AI')
 
   // Parse JSON from response, handling potential markdown code blocks
-  let jsonStr = textBlock.text.trim()
+  let jsonStr = content.trim()
   if (jsonStr.startsWith('```json')) {
     jsonStr = jsonStr.slice(7)
   } else if (jsonStr.startsWith('```')) {
@@ -87,4 +100,4 @@ export async function generateJSON<T>(
   return JSON.parse(jsonStr.trim()) as T
 }
 
-export { anthropic }
+export { openrouter }
