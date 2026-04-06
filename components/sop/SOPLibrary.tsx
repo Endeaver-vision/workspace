@@ -10,17 +10,19 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { SOPCard } from './SOPCard'
 import { CategoryTree } from './CategoryTree'
 import { useSOPStore } from '@/lib/store/sop-store'
+import { useWorkspace } from '@/lib/context/workspace-context'
 import type { SOPStatus } from '@/types/training.types'
 
 // Test user ID for development
 const TEST_USER_ID = '00000000-0000-0000-0000-000000000001'
 
 interface SOPLibraryProps {
-  workspaceId: string
+  workspaceId: string // This is the UUID for database queries
 }
 
 export function SOPLibrary({ workspaceId }: SOPLibraryProps) {
   const router = useRouter()
+  const { urlPath } = useWorkspace() // Use slug for URLs
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
@@ -61,7 +63,7 @@ export function SOPLibrary({ workspaceId }: SOPLibraryProps) {
       category_id: selectedCategory,
     })
     if (sop) {
-      router.push(`/${workspaceId}/sop/${sop.id}`)
+      router.push(`/${urlPath}/sop/${sop.id}`)
     }
   }
 
@@ -95,7 +97,7 @@ export function SOPLibrary({ workspaceId }: SOPLibraryProps) {
           categories={categories}
           selectedCategory={selectedCategory}
           onSelectCategory={setSelectedCategory}
-          workspaceId={workspaceId}
+          workspaceId={urlPath}
           sopCounts={sopCounts}
         />
       </div>
@@ -186,7 +188,7 @@ export function SOPLibrary({ workspaceId }: SOPLibraryProps) {
                 <SOPCard
                   key={sop.id}
                   sop={sop}
-                  workspaceId={workspaceId}
+                  workspaceId={urlPath}
                   onArchive={archiveSOP}
                   onDelete={deleteSOP}
                 />
@@ -198,7 +200,7 @@ export function SOPLibrary({ workspaceId }: SOPLibraryProps) {
                 <SOPCard
                   key={sop.id}
                   sop={sop}
-                  workspaceId={workspaceId}
+                  workspaceId={urlPath}
                   onArchive={archiveSOP}
                   onDelete={deleteSOP}
                 />

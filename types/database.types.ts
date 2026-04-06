@@ -39,6 +39,7 @@ export interface Database {
         Row: {
           id: string
           name: string
+          slug: string | null
           icon: string | null
           owner_id: string
           created_at: string
@@ -47,6 +48,7 @@ export interface Database {
         Insert: {
           id?: string
           name: string
+          slug?: string | null
           icon?: string | null
           owner_id: string
           created_at?: string
@@ -55,6 +57,7 @@ export interface Database {
         Update: {
           id?: string
           name?: string
+          slug?: string | null
           icon?: string | null
           owner_id?: string
           created_at?: string
