@@ -143,7 +143,8 @@ export const useSOPStore = create<SOPState>((set, get) => ({
   },
 
   loadSOP: async (sopId: string) => {
-    set({ isLoading: true, error: null })
+    // Clear currentSOP immediately to prevent showing stale data
+    set({ isLoading: true, error: null, currentSOP: null })
     const supabase = createClient()
 
     try {

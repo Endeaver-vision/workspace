@@ -1,10 +1,9 @@
 'use client'
 
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { FileText, MoreHorizontal, Archive, Trash2, Edit } from 'lucide-react'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,30 +28,43 @@ const statusColors = {
 }
 
 export function SOPCard({ sop, workspaceId, onArchive, onDelete }: SOPCardProps) {
+  const router = useRouter()
+  const sopUrl = `/${workspaceId}/sop/${sop.id}`
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't navigate if clicking on the dropdown or its children
+    const target = e.target as HTMLElement
+    if (target.closest('[data-radix-collection-item]') || target.closest('[role="menu"]')) {
+      return
+    }
+    router.push(sopUrl)
+  }
+
   return (
-    <Card className="group hover:shadow-md transition-shadow">
+    <Card
+      className="group hover:shadow-md transition-shadow cursor-pointer"
+      onClick={handleCardClick}
+    >
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-2">
-          <Link
-            href={`/${workspaceId}/sop/${sop.id}`}
-            className="flex-1 min-w-0"
-          >
+          <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2">
               <FileText className="h-5 w-5 text-blue-500 flex-shrink-0" />
               <h3 className="font-medium truncate">{sop.title || 'Untitled'}</h3>
             </div>
-          </Link>
+          </div>
 
           <DropdownMenu>
-            <DropdownMenuTrigger className="h-8 w-8 opacity-0 group-hover:opacity-100 inline-flex items-center justify-center rounded-md hover:bg-accent">
+            <DropdownMenuTrigger
+              className="h-8 w-8 opacity-0 group-hover:opacity-100 inline-flex items-center justify-center rounded-md hover:bg-accent"
+              onClick={(e) => e.stopPropagation()}
+            >
               <MoreHorizontal className="h-4 w-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>
-                <Link href={`/${workspaceId}/sop/${sop.id}`} className="flex items-center w-full">
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </Link>
+              <DropdownMenuItem onClick={() => router.push(sopUrl)}>
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               {sop.status !== 'archived' && onArchive && (
