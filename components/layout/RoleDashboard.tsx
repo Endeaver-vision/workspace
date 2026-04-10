@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
+import { useWorkspace } from '@/lib/context/workspace-context'
 import type { UserRole } from '@/types/training.types'
 
 interface RoleDashboardProps {
@@ -38,6 +39,8 @@ interface RoleDashboardProps {
 }
 
 export function RoleDashboard({ workspaceId, userRole, userName, stats }: RoleDashboardProps) {
+  // Use urlPath (slug) for URLs to work with proxy
+  const { urlPath } = useWorkspace()
   const completionRate = stats.totalAssignments && stats.totalAssignments > 0
     ? Math.round((stats.completedAssignments || 0) / stats.totalAssignments * 100)
     : 0
@@ -123,7 +126,7 @@ export function RoleDashboard({ workspaceId, userRole, userName, stats }: RoleDa
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Link href={`/${workspaceId}/training`}>
+                <Link href={`/${urlPath}/training`}>
                   <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
                     <CardContent className="flex items-center gap-4 pt-6">
                       <div className="h-12 w-12 rounded-lg bg-blue-100 flex items-center justify-center">
@@ -140,7 +143,7 @@ export function RoleDashboard({ workspaceId, userRole, userName, stats }: RoleDa
                   </Card>
                 </Link>
 
-                <Link href={`/${workspaceId}/certificates`}>
+                <Link href={`/${urlPath}/certificates`}>
                   <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
                     <CardContent className="flex items-center gap-4 pt-6">
                       <div className="h-12 w-12 rounded-lg bg-amber-100 flex items-center justify-center">
@@ -157,7 +160,7 @@ export function RoleDashboard({ workspaceId, userRole, userName, stats }: RoleDa
                   </Card>
                 </Link>
 
-                <Link href={`/${workspaceId}/sops`}>
+                <Link href={`/${urlPath}/sops`}>
                   <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
                     <CardContent className="flex items-center gap-4 pt-6">
                       <div className="h-12 w-12 rounded-lg bg-purple-100 flex items-center justify-center">
@@ -246,7 +249,7 @@ export function RoleDashboard({ workspaceId, userRole, userName, stats }: RoleDa
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Link href={`/${workspaceId}/sops`}>
+                <Link href={`/${urlPath}/sops`}>
                   <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
                     <CardContent className="flex flex-col items-center gap-2 pt-6">
                       <div className="h-12 w-12 rounded-lg bg-blue-100 flex items-center justify-center">
@@ -257,7 +260,7 @@ export function RoleDashboard({ workspaceId, userRole, userName, stats }: RoleDa
                   </Card>
                 </Link>
 
-                <Link href={`/${workspaceId}/users`}>
+                <Link href={`/${urlPath}/users`}>
                   <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
                     <CardContent className="flex flex-col items-center gap-2 pt-6">
                       <div className="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center">
@@ -268,7 +271,7 @@ export function RoleDashboard({ workspaceId, userRole, userName, stats }: RoleDa
                   </Card>
                 </Link>
 
-                <Link href={`/${workspaceId}/reports`}>
+                <Link href={`/${urlPath}/reports`}>
                   <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
                     <CardContent className="flex flex-col items-center gap-2 pt-6">
                       <div className="h-12 w-12 rounded-lg bg-purple-100 flex items-center justify-center">
@@ -279,7 +282,7 @@ export function RoleDashboard({ workspaceId, userRole, userName, stats }: RoleDa
                   </Card>
                 </Link>
 
-                <Link href={`/${workspaceId}/search`}>
+                <Link href={`/${urlPath}/search`}>
                   <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
                     <CardContent className="flex flex-col items-center gap-2 pt-6">
                       <div className="h-12 w-12 rounded-lg bg-amber-100 flex items-center justify-center">
