@@ -74,6 +74,13 @@ export async function middleware(request: NextRequest) {
   const workspaceId = await getWorkspaceIdBySlug(firstSegment)
 
   if (workspaceId) {
+    // If just the workspace slug with no subpath, redirect to SOPs library
+    if (segments.length === 1) {
+      const url = request.nextUrl.clone()
+      url.pathname = `/${firstSegment}/sops`
+      return NextResponse.redirect(url)
+    }
+
     // Rewrite the URL to use the workspace ID internally
     const newPathname = '/' + [workspaceId, ...segments.slice(1)].join('/')
     const url = request.nextUrl.clone()

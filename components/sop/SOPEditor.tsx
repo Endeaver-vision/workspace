@@ -174,7 +174,9 @@ export function SOPEditor({ sopId, workspaceId }: SOPEditorProps) {
 
           <Select value={categoryId || 'none'} onValueChange={handleCategoryChange}>
             <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="No category" />
+              <SelectValue>
+                {categoryId && currentSOP?.category ? currentSOP.category.name : 'No category'}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="none">No category</SelectItem>
