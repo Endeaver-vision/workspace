@@ -10,8 +10,6 @@ import {
   FileText,
   Plus,
   ArrowRight,
-  Sparkles,
-  Clock,
   CheckCircle,
   AlertTriangle,
 } from 'lucide-react'
@@ -278,17 +276,6 @@ export function RoleDashboard({ workspaceId, userRole, userName, stats }: RoleDa
                         <BarChart3 className="h-6 w-6 text-purple-600" />
                       </div>
                       <h3 className="font-medium text-center">View Reports</h3>
-                    </CardContent>
-                  </Card>
-                </Link>
-
-                <Link href={`/${urlPath}/search`}>
-                  <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
-                    <CardContent className="flex flex-col items-center gap-2 pt-6">
-                      <div className="h-12 w-12 rounded-lg bg-amber-100 flex items-center justify-center">
-                        <Sparkles className="h-6 w-6 text-amber-600" />
-                      </div>
-                      <h3 className="font-medium text-center">AI Assistant</h3>
                     </CardContent>
                   </Card>
                 </Link>

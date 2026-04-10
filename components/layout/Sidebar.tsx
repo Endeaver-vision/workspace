@@ -14,7 +14,6 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  Sparkles,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -57,11 +56,6 @@ export function Sidebar({ workspaceId, userRole }: SidebarProps) {
       label: 'Certificates',
       href: `/${workspaceId}/certificates`,
       icon: Award,
-    },
-    {
-      label: 'AI Assistant',
-      href: `/${workspaceId}/search`,
-      icon: Sparkles,
     },
     {
       label: 'Users',

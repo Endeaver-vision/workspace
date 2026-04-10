@@ -22,6 +22,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useSOPStore } from '@/lib/store/sop-store'
+import { useWorkspace } from '@/lib/context/workspace-context'
 import { AssignmentModal } from '@/components/users'
 import type { SOPStatus } from '@/types/training.types'
 import { cn } from '@/lib/utils'
@@ -48,6 +49,7 @@ const statusColors = {
 
 export function SOPEditor({ sopId, workspaceId }: SOPEditorProps) {
   const router = useRouter()
+  const { urlPath } = useWorkspace() // Use slug for URLs
   const [title, setTitle] = useState('')
   const [content, setContent] = useState<any>(null)
   const [categoryId, setCategoryId] = useState<string | null>(null)
@@ -116,13 +118,13 @@ export function SOPEditor({ sopId, workspaceId }: SOPEditorProps) {
 
   const handleArchive = async () => {
     await archiveSOP(sopId)
-    router.push(`/${workspaceId}/sops`)
+    router.push(`/${urlPath}/sops`)
   }
 
   const handleDelete = async () => {
     if (confirm('Are you sure you want to delete this SOP?')) {
       await deleteSOP(sopId)
-      router.push(`/${workspaceId}/sops`)
+      router.push(`/${urlPath}/sops`)
     }
   }
 
@@ -150,7 +152,7 @@ export function SOPEditor({ sopId, workspaceId }: SOPEditorProps) {
     return (
       <div className="flex flex-col items-center justify-center h-screen">
         <h2 className="text-xl font-medium mb-2">SOP not found</h2>
-        <Button variant="outline" onClick={() => router.push(`/${workspaceId}/sops`)}>
+        <Button variant="outline" onClick={() => router.push(`/${urlPath}/sops`)}>
           Back to Library
         </Button>
       </div>
@@ -165,7 +167,7 @@ export function SOPEditor({ sopId, workspaceId }: SOPEditorProps) {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => router.push(`/${workspaceId}/sops`)}
+            onClick={() => router.push(`/${urlPath}/sops`)}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
