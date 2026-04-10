@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
-import { ArrowLeft, Save, Upload, MoreHorizontal, Eye, Archive, Trash2, Users } from 'lucide-react'
+import { ArrowLeft, Save, MoreHorizontal, Eye, Archive, Trash2, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -233,10 +233,6 @@ export function SOPEditor({ sopId, workspaceId }: SOPEditorProps) {
               <DropdownMenuItem onClick={() => setIsAssignModalOpen(true)}>
                 <Users className="h-4 w-4 mr-2" />
                 Assign to Users
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Upload className="h-4 w-4 mr-2" />
-                Upload Document
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               {currentSOP.status !== 'archived' && (
