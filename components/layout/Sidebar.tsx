@@ -78,16 +78,18 @@ export function Sidebar({ workspaceId, userRole }: SidebarProps) {
       )}
     >
       {/* Back to Dashboard */}
-      <div className="p-2 border-b border-slate-800">
+      <div className="p-3 border-b border-slate-800">
         <a
           href="https://app.insightforeyecare.com"
           className={cn(
-            'flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-slate-400 hover:text-white hover:bg-slate-800'
+            'flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-colors font-medium',
+            'bg-slate-700 text-white hover:bg-slate-600',
+            isCollapsed ? 'px-2' : ''
           )}
           title={isCollapsed ? 'Back to Dashboard' : undefined}
         >
-          <ArrowLeft className="h-4 w-4 flex-shrink-0" />
-          {!isCollapsed && <span className="text-sm">Back to Dashboard</span>}
+          <ArrowLeft className="h-5 w-5 flex-shrink-0" />
+          {!isCollapsed && <span>Back to Dashboard</span>}
         </a>
       </div>
 
