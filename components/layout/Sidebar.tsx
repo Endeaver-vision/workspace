@@ -77,6 +77,20 @@ export function Sidebar({ workspaceId, userRole }: SidebarProps) {
         isCollapsed ? 'w-16' : 'w-64'
       )}
     >
+      {/* Back to Dashboard */}
+      <div className="p-2 border-b border-slate-800">
+        <a
+          href="https://app.insightforeyecare.com"
+          className={cn(
+            'flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-slate-400 hover:text-white hover:bg-slate-800'
+          )}
+          title={isCollapsed ? 'Back to Dashboard' : undefined}
+        >
+          <ArrowLeft className="h-4 w-4 flex-shrink-0" />
+          {!isCollapsed && <span className="text-sm">Back to Dashboard</span>}
+        </a>
+      </div>
+
       {/* Header */}
       <div className="p-4 border-b border-slate-800">
         <div className="flex items-center justify-between">
@@ -131,19 +145,6 @@ export function Sidebar({ workspaceId, userRole }: SidebarProps) {
         </ul>
       </nav>
 
-      {/* Footer */}
-      <div className="p-4 border-t border-slate-800 space-y-1">
-        <a
-          href="https://app.insightforeyecare.com"
-          className={cn(
-            'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-slate-400 hover:text-white hover:bg-slate-800'
-          )}
-          title={isCollapsed ? 'Back to Dashboard' : undefined}
-        >
-          <ArrowLeft className="h-5 w-5 flex-shrink-0" />
-          {!isCollapsed && <span>Back to Dashboard</span>}
-        </a>
-      </div>
     </aside>
   )
 }
