@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { Sidebar, TopNav, Breadcrumb } from '@/components/layout'
-import { WelcomeModal } from '@/components/layout'
 import { AIChatAssistant } from '@/components/ai'
 import { WorkspaceProvider, useWorkspace } from '@/lib/context/workspace-context'
 import type { UserRole } from '@/types/training.types'
@@ -42,14 +41,6 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
-
-      {/* Welcome modal for new users */}
-      <WelcomeModal
-        userName={TEST_USER.name}
-        userRole={TEST_USER.role}
-        workspaceId={urlPath}
-        isNewUser={true}
-      />
 
       {/* Floating AI chat assistant */}
       <AIChatAssistant workspaceId={workspaceId} />
