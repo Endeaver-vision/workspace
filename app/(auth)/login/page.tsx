@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -16,53 +15,64 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
 
-    if (error) {
-      setError(error.message)
+      const result = await response.json()
+
+      if (result.error) {
+        setError(result.error.message)
+        setLoading(false)
+        return
+      }
+
+      router.push('/dashboard')
+      router.refresh()
+    } catch (err: any) {
+      setError('Login failed. Please try again.')
       setLoading(false)
-      return
     }
-
-    router.push('/dashboard')
-    router.refresh()
   }
 
-  const handleMagicLink = async () => {
-    if (!email) {
-      setError('Please enter your email')
-      return
-    }
-
+  // Dev mode: auto-login with test user
+  const handleDevLogin = async () => {
     setLoading(true)
     setError(null)
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    })
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: 'test@example.com',
+          devMode: true
+        }),
+      })
 
-    if (error) {
-      setError(error.message)
+      const result = await response.json()
+
+      if (result.error) {
+        setError(result.error.message)
+        setLoading(false)
+        return
+      }
+
+      router.push('/dashboard')
+      router.refresh()
+    } catch (err: any) {
+      setError('Login failed. Please try again.')
       setLoading(false)
-      return
     }
-
-    setError(null)
-    alert('Check your email for a magic link!')
-    setLoading(false)
   }
 
   return (
@@ -75,7 +85,7 @@ export default function LoginPage() {
             </div>
           </div>
           <CardTitle className="text-2xl">Welcome back</CardTitle>
-          <CardDescription>Sign in to your Workspace account</CardDescription>
+          <CardDescription>Sign in to your TrainHub account</CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>
           <CardContent className="space-y-4">
@@ -100,7 +110,7 @@ export default function LoginPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="••••••••"
+                placeholder="********"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -116,10 +126,10 @@ export default function LoginPage() {
               type="button"
               variant="outline"
               className="w-full"
-              onClick={handleMagicLink}
+              onClick={handleDevLogin}
               disabled={loading}
             >
-              Send magic link
+              Dev Mode (Test User)
             </Button>
             <p className="text-sm text-center text-muted-foreground">
               Don&apos;t have an account?{' '}

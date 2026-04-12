@@ -2,6 +2,9 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Workspace } from '@/types/database.types'
 
+// Force dynamic rendering (database connection at runtime, not build time)
+export const dynamic = 'force-dynamic'
+
 // Test user ID for development (bypasses auth)
 const TEST_USER_ID = '00000000-0000-0000-0000-000000000001'
 

@@ -1,9 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { useWorkspaceStore } from '@/lib/store/workspace-store'
-import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -16,11 +14,10 @@ import { LogOut, Settings, User } from 'lucide-react'
 
 export function UserMenu() {
   const router = useRouter()
-  const supabase = createClient()
   const { profile } = useWorkspaceStore()
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
+    await fetch('/api/auth/logout', { method: 'POST' })
     router.push('/login')
     router.refresh()
   }

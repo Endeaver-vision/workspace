@@ -37,31 +37,8 @@ export function PageEditor({ page: initialPage }: PageEditorProps) {
     return () => setCurrentPage(null)
   }, [page, setCurrentPage])
 
-  // Subscribe to realtime updates
-  useEffect(() => {
-    const channel = supabase
-      .channel(`page-${page.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'pages',
-          filter: `id=eq.${page.id}`,
-        },
-        (payload) => {
-          // Only update if changes came from another client
-          const newData = payload.new as Page
-          setPage(newData)
-          updatePage(page.id, newData)
-        }
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [page.id, supabase, updatePage])
+  // Note: Realtime subscriptions removed during PostgreSQL migration
+  // Can be re-added later using WebSockets or polling
 
   // Save function with debouncing
   const saveContent = useCallback(

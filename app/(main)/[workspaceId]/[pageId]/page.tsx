@@ -2,6 +2,9 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { PageEditor } from '@/components/page/PageEditor'
 
+// Force dynamic rendering (database connection at runtime)
+export const dynamic = 'force-dynamic'
+
 interface PageProps {
   params: Promise<{ workspaceId: string; pageId: string }>
 }

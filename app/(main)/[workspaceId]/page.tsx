@@ -3,6 +3,9 @@ import { redirect } from 'next/navigation'
 import { RoleDashboard } from '@/components/layout'
 import type { UserRole } from '@/types/training.types'
 
+// Force dynamic rendering (database connection at runtime)
+export const dynamic = 'force-dynamic'
+
 // Test user ID for development (bypasses auth)
 const TEST_USER_ID = '00000000-0000-0000-0000-000000000001'
 const TEST_USER_NAME = 'Test User'

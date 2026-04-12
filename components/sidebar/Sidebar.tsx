@@ -109,32 +109,8 @@ export function Sidebar() {
 
     loadPages()
 
-    // Subscribe to realtime changes
-    const channel = supabase
-      .channel('pages-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'pages',
-          filter: `workspace_id=eq.${currentWorkspace.id}`,
-        },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            addPage(payload.new as any)
-          } else if (payload.eventType === 'UPDATE') {
-            useWorkspaceStore.getState().updatePage(payload.new.id, payload.new as any)
-          } else if (payload.eventType === 'DELETE') {
-            useWorkspaceStore.getState().removePage(payload.old.id)
-          }
-        }
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
+    // Note: Realtime subscriptions removed during PostgreSQL migration
+    // Can be re-added later using WebSockets or polling
   }, [currentWorkspace, supabase, setPages, addPage])
 
   const { createDatabase } = useDatabaseStore()

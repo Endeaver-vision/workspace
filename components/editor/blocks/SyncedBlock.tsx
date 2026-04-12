@@ -59,27 +59,8 @@ export function SyncedBlock({
   useEffect(() => {
     loadSyncedBlock()
 
-    // Subscribe to real-time updates
-    const channel = supabase
-      .channel(`synced_block:${syncedBlockId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'synced_blocks',
-          filter: `id=eq.${syncedBlockId}`,
-        },
-        (payload: any) => {
-          setSyncedBlock(payload.new as SyncedBlockType)
-          onUpdate?.(payload.new.content)
-        }
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
+    // Note: Realtime subscriptions removed during PostgreSQL migration
+    // Can be re-added later using WebSockets or polling
   }, [syncedBlockId, supabase, loadSyncedBlock, onUpdate])
 
   const handleContentUpdate = async (newContent: any[]) => {
