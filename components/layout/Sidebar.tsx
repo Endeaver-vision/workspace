@@ -80,7 +80,7 @@ export function Sidebar({ workspaceId, userRole }: SidebarProps) {
       {/* Back to Dashboard */}
       <div className="p-3 border-b border-slate-800">
         <a
-          href="https://app.insightforeyecare.com"
+          href="https://app.oculogicgroup.com"
           className={cn(
             'flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-colors font-medium',
             'bg-slate-700 text-white hover:bg-slate-600',

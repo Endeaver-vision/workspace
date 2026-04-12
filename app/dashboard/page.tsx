@@ -18,8 +18,8 @@ export default async function DashboardPage() {
   const workspaces = (workspacesData || []) as Workspace[]
 
   if (workspaces.length > 0) {
-    // Redirect to first workspace
-    redirect(`/${workspaces[0].id}`)
+    // Redirect to training (simple URL)
+    redirect(`/training/sops`)
   }
 
   // Create test profile if needed
@@ -48,7 +48,7 @@ export default async function DashboardPage() {
     .single()
 
   if (newWorkspaceData) {
-    redirect(`/${(newWorkspaceData as Workspace).id}`)
+    redirect(`/training/sops`)
   }
 
   // Fallback with error info

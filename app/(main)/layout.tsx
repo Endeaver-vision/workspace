@@ -54,7 +54,7 @@ export default function MainLayout({
   children: React.ReactNode
 }) {
   const params = useParams()
-  const workspaceId = params?.workspaceId as string || '00000000-0000-0000-0000-000000000002'
+  const workspaceId = params?.workspaceId as string || 'training'
   const [hasMounted, setHasMounted] = useState(false)
 
   useEffect(() => {
