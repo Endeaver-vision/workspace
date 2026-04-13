@@ -7,6 +7,67 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL || 'postgresql://officeapps:officeapps123@localhost:5432/officeapps',
 })
 
+// InsertBuilder that supports chaining .select().single() after insert
+class InsertBuilder {
+  private tableName: string;
+  private insertData: Record<string, any> | Record<string, any>[];
+  private shouldSelect: boolean = false;
+  private shouldSingle: boolean = false;
+
+  constructor(tableName: string, data: Record<string, any> | Record<string, any>[]) {
+    this.tableName = tableName;
+    this.insertData = data;
+  }
+
+  select() {
+    this.shouldSelect = true;
+    return this;
+  }
+
+  single() {
+    this.shouldSingle = true;
+    return this;
+  }
+
+  private async execute() {
+    const rows = Array.isArray(this.insertData) ? this.insertData : [this.insertData];
+    if (rows.length === 0) return { data: null, error: null };
+
+    const columns = Object.keys(rows[0]);
+    const values: any[] = [];
+    const placeholders: string[] = [];
+
+    rows.forEach((row, rowIndex) => {
+      const rowPlaceholders: string[] = [];
+      columns.forEach((col, colIndex) => {
+        values.push(row[col]);
+        rowPlaceholders.push(`$${rowIndex * columns.length + colIndex + 1}`);
+      });
+      placeholders.push(`(${rowPlaceholders.join(', ')})`);
+    });
+
+    const query = `
+      INSERT INTO ${this.tableName} (${columns.join(', ')})
+      VALUES ${placeholders.join(', ')}
+      RETURNING *
+    `;
+
+    try {
+      const result = await pool.query(query, values);
+      if (this.shouldSingle && result.rows.length > 0) {
+        return { data: result.rows[0], error: null };
+      }
+      return { data: result.rows, error: null };
+    } catch (err: any) {
+      return { data: null, error: { message: err.message } };
+    }
+  }
+
+  then(resolve: (value: { data: any; error: any }) => void, reject?: (reason?: any) => void) {
+    return this.execute().then(resolve, reject);
+  }
+}
+
 class QueryBuilder {
   private tableName: string;
   private selectColumns: string = '*';
@@ -46,35 +107,8 @@ class QueryBuilder {
     return this;
   }
 
-  async insert(data: Record<string, any> | Record<string, any>[]) {
-    const rows = Array.isArray(data) ? data : [data];
-    if (rows.length === 0) return { data: null, error: null };
-
-    const columns = Object.keys(rows[0]);
-    const values: any[] = [];
-    const placeholders: string[] = [];
-
-    rows.forEach((row, rowIndex) => {
-      const rowPlaceholders: string[] = [];
-      columns.forEach((col, colIndex) => {
-        values.push(row[col]);
-        rowPlaceholders.push(`$${rowIndex * columns.length + colIndex + 1}`);
-      });
-      placeholders.push(`(${rowPlaceholders.join(', ')})`);
-    });
-
-    const query = `
-      INSERT INTO ${this.tableName} (${columns.join(', ')})
-      VALUES ${placeholders.join(', ')}
-      RETURNING *
-    `;
-
-    try {
-      const result = await pool.query(query, values);
-      return { data: result.rows, error: null };
-    } catch (err: any) {
-      return { data: null, error: { message: err.message } };
-    }
+  insert(data: Record<string, any> | Record<string, any>[]) {
+    return new InsertBuilder(this.tableName, data);
   }
 
   async update(data: Record<string, any>) {
