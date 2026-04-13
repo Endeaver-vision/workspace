@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     // Validate table name to prevent SQL injection (whitelist approach)
     const allowedTables = [
       'profiles', 'workspaces', 'workspace_members', 'pages', 'sops',
-      'quizzes', 'quiz_questions', 'quiz_attempts', 'quiz_answers',
+      'sop_categories', 'quizzes', 'quiz_questions', 'quiz_attempts', 'quiz_answers',
       'certificates', 'notifications', 'api_keys', 'databases',
       'database_properties', 'database_rows', 'page_properties'
     ]
