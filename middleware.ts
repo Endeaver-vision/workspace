@@ -1,5 +1,4 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 
 // Simple cache for slug -> id mapping (in-memory, refreshed on cold start)
 const slugCache = new Map<string, string>()
@@ -13,27 +12,35 @@ function isUUID(str: string): boolean {
 }
 
 // Get workspace ID from slug (with caching)
-async function getWorkspaceIdBySlug(slug: string): Promise<string | null> {
+async function getWorkspaceIdBySlug(slug: string, baseUrl: string): Promise<string | null> {
   // Check cache first
   if (slugCache.has(slug)) {
     return slugCache.get(slug)!
   }
 
-  // Create a Supabase client for middleware (no cookies needed for public read)
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  try {
+    // Use fetch to call our API endpoint instead of Supabase directly
+    const response = await fetch(`${baseUrl}/api/db`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'select',
+        table: 'workspaces',
+        select: 'id',
+        where: [{ column: 'slug', value: slug }],
+        limit: 1
+      })
+    })
 
-  const { data } = await supabase
-    .from('workspaces')
-    .select('id')
-    .eq('slug', slug)
-    .single()
+    const result = await response.json()
 
-  if (data?.id) {
-    slugCache.set(slug, data.id)
-    return data.id
+    if (result.data && result.data.length > 0) {
+      const id = result.data[0].id
+      slugCache.set(slug, id)
+      return id
+    }
+  } catch (error) {
+    console.error('Middleware: Failed to lookup workspace slug:', error)
   }
 
   return null
@@ -71,7 +78,8 @@ export async function middleware(request: NextRequest) {
   }
 
   // Try to look up the workspace by slug
-  const workspaceId = await getWorkspaceIdBySlug(firstSegment)
+  const baseUrl = request.nextUrl.origin
+  const workspaceId = await getWorkspaceIdBySlug(firstSegment, baseUrl)
 
   if (workspaceId) {
     // If just the workspace slug with no subpath, redirect to SOPs library
